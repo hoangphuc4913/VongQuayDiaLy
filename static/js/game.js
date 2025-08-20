@@ -1,5 +1,5 @@
 let currentQuestions = [];
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = '';
 let gameState = null;
 
 function initGameState() {
@@ -79,7 +79,7 @@ function loadQuiz(quizId) {
             // 👉 Thêm nút Back
             const backBtn = document.createElement("button");
             backBtn.className = "btn btn-danger btn-quiz";
-            backBtn.innerText = "Back";
+            backBtn.innerText = "Quay lại";
             backBtn.onclick = fetchQuizzes;   // quay lại danh sách quiz
             container.appendChild(backBtn);
         });
@@ -121,7 +121,7 @@ function checkAnswer(index) {
         if (sel && sel.value === q.correct_answer) isCorrect = true;
     }
 
-    alert(isCorrect ? "✅ Correct!" : "❌ Wrong!");
+    alert(isCorrect ? "✅ Đúng rồi!" : "❌ Sai rồi!");
     document.getElementById("popup").classList.remove("active");
     awardAndAdvance(isCorrect);
 }
