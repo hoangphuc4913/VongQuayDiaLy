@@ -1,5 +1,38 @@
 body { padding: 30px; background-color: #f8f9fa; }
 .btn-quiz { margin: 5px; width: 150px; }
-.popup { display: none; position: fixed; z-index: 1000; left: 50%; top: 50%; width: 400px; transform: translate(-50%, -50%); background: white; padding: 20px; box-shadow: 0 0 10px gray; border-radius: 8px; }
+.popup {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 50%;
+  top: 50%;
+  max-width: 95%;   /* ⚡ thay vì width cứng */
+  width: 400px;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  box-shadow: 0 0 10px gray;
+  border-radius: 8px;
+}
 .popup.active { display: block; }
 .popup .btn { margin-top: 10px; }
+
+@media (max-width: 576px) {
+  body {
+    padding: 15px;  /* ít padding hơn trên mobile */
+  }
+  h2, h5 {
+    font-size: 1.2rem; /* chữ nhỏ lại cho vừa */
+  }
+  .btn-quiz {
+    width: 100%;       /* ⚡ trên mobile: full width */
+    margin: 5px 0;
+  }
+  .popup {
+    padding: 15px;     /* nhỏ gọn hơn */
+  }
+  .btn {
+  min-height: 44px; /* chuẩn tối thiểu để dễ chạm trên mobile */
+  font-size: 1rem;
+    }
+}
