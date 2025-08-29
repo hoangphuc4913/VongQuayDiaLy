@@ -1,0 +1,11 @@
+body {
+  background-color: #f9f9f9;
+}
+.list-group-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.list-group-item button {
+  margin-left: 5px;
+}

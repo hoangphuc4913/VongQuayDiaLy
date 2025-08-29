@@ -105,7 +105,7 @@ function showQuestion(index) {
         content.innerHTML += `<input type="text" class="form-control" id="note-answer">`;
     }
 
-    content.innerHTML += `<button class="btn btn-success mt-2" onclick="checkAnswer(${index})">Check</button>`;
+    content.innerHTML += `<button class="btn btn-success mt-2" onclick="checkAnswer(${index})">Kiểm tra</button>`;
 }
 
 function checkAnswer(index) {

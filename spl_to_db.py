@@ -16,5 +16,5 @@ cursor.executescript(sql_script)
 
 conn.commit()
 conn.close()
-
+ 
 print(f"✅ Đã tạo thành công file {DB_NAME} từ {FILE_NAME}")

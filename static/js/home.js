@@ -1,11 +1,12 @@
 (function () {
   const nextBtn = document.getElementById('nextBtn');
   const backBtn = document.getElementById('backBtn');
-  const startBtn = document.getElementById('startBtn');
+  const startNormalBtn = document.getElementById('startNormalBtn');
   const numPlayersEl = document.getElementById('numPlayers');
   const numRoundsEl = document.getElementById('numRounds');
   const playerNamesWrap = document.getElementById('playerNames');
   const namePanel = document.getElementById('namePanel');
+  const startRandomBtn = document.getElementById('startRandomBtn');
 
   function renderNameInputs(n) {
     playerNamesWrap.innerHTML = '';
@@ -27,23 +28,37 @@
     renderNameInputs(nPlayers);
     namePanel.classList.remove('d-none');
   };
-
+  
   backBtn.onclick = () => {
     namePanel.classList.add('d-none');
   };
 
-  startBtn.onclick = () => {
-    const players = Array.from(document.querySelectorAll('.player-name'))
-      .map(inp => inp.value.trim() || "Người");
-    const rounds = parseInt(numRoundsEl.value);
-    const state = {
-      players: players.map(name => ({ name, score: 0 })),
-      totalRounds: rounds,
-      currentRound: 1,
-      currentPlayerIndex: 0
-    };
-    // truyền state bằng sessionStorage
-    sessionStorage.setItem("quizGameState", JSON.stringify(state));
-    window.location.href = "/game";
+  startNormalBtn.onclick = () => {
+  const players = Array.from(document.querySelectorAll('.player-name'))
+    .map(inp => inp.value.trim() || "Người");
+  const rounds = parseInt(numRoundsEl.value);
+  const state = {
+    players: players.map(name => ({ name, score: 0 })),
+    totalRounds: rounds,
+    currentRound: 1,
+    currentPlayerIndex: 0
   };
-})();
+  sessionStorage.setItem("quizGameState", JSON.stringify(state));
+  window.location.href = "/game";
+};
+
+startRandomBtn.onclick = () => {
+  const players = Array.from(document.querySelectorAll('.player-name'))
+    .map(inp => inp.value.trim() || "Người");
+  const rounds = parseInt(numRoundsEl.value);
+  const state = {
+    players: players.map(name => ({ name, score: 0 })),
+    totalRounds: rounds,
+    currentRound: 1,
+    currentPlayerIndex: 0
+  };
+  sessionStorage.setItem("quizGameState", JSON.stringify(state));
+  window.location.href = "/random";
+  };
+}
+)();
