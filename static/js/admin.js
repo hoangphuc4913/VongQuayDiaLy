@@ -74,6 +74,7 @@ async function selectQuiz(id, name) {
   const res = await fetch(`${API_BASE_URL}/api/questions/${id}`);
   const questions = await res.json();
   const list = document.getElementById("questionList");
+  console.log("Questions loaded:", questions);
   list.innerHTML = "";
   questions.forEach((q, idx) => {
     const li = document.createElement("li");

@@ -13,6 +13,7 @@ let allQuizzes = [];
 let currentQuestions = [];
 let currentMode = "quiz"; // "quiz" -> quay chọn quiz, "question" -> quay chọn câu hỏi
 let selectedQuiz = null;
+console.log("Hello");
 
 function initGameState() {
   const raw = sessionStorage.getItem("quizGameState");
@@ -126,6 +127,7 @@ function spinWheel() {
       if (currentMode === "quiz") {
         idx = pickResult(allQuizzes.map(q=>q.name));
         selectedQuiz = allQuizzes[idx];
+        console.log("Quiz: ", selectedQuiz);
         currentMode = "question";
         fetchQuestions(selectedQuiz.id);
       } else {
