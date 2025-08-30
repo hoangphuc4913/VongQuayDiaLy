@@ -158,6 +158,7 @@ async function addQuestion() {
     })
   });
   bootstrap.Modal.getInstance(document.getElementById("questionModal")).hide();
+  questionModal.hide();
   selectQuiz(selectedQuiz, document.getElementById("viewQuizName").textContent);
 }
 
