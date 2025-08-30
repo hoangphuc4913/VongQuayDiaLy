@@ -8,14 +8,14 @@ body { padding: 20px; }
 
 #pointer {
   position: absolute;
-  top: -40px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  right: -40px;              /* đặt ra ngoài bên phải */
+  transform: translateY(-50%); 
   width: 0;
   height: 0;
-  border-left: 20px solid transparent;
-  border-right: 20px solid transparent;
-  border-top: 40px solid red; /* tam giác đỏ hướng xuống */
+  border-top: 20px solid transparent;
+  border-bottom: 20px solid transparent;
+  border-right: 40px solid red; /* tam giác đỏ chĩa vào vòng quay */
   z-index: 10;
 }
 

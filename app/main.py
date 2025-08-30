@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import sqlite3, json, os
-
+from starlette.responses import Response
 app = FastAPI()
 
 app.add_middleware(
@@ -14,6 +14,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from datetime import datetime
+
+@app.middleware("http")
+async def add_timestamp(request: Request, call_next):
+    request.state.timestamp = int(datetime.now().timestamp())
+    response = await call_next(request)
+    return response
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -29,23 +37,38 @@ def get_db():
 @app.get("/", response_class=HTMLResponse)
 @app.get("/home", response_class=HTMLResponse)
 def home(request: Request):
-    return templates.TemplateResponse("trang_chu.html", {"request": request})
+    return templates.TemplateResponse(
+        "trang_chu.html",
+        {"request": request, "timestamp": request.state.timestamp}
+    )
 
 @app.get("/game", response_class=HTMLResponse)
 def game(request: Request):
-    return templates.TemplateResponse("game.html", {"request": request})
+    return templates.TemplateResponse(
+        "game.html",
+        {"request": request, "timestamp": request.state.timestamp}
+    )
 
 @app.get("/result", response_class=HTMLResponse)
 def result(request: Request):
-    return templates.TemplateResponse("result.html", {"request": request})
+    return templates.TemplateResponse(
+        "result.html",
+        {"request": request, "timestamp": request.state.timestamp}
+    )
 
 @app.get("/random", response_class=HTMLResponse)
 def random_mode(request: Request):
-    return templates.TemplateResponse("random.html", {"request": request})
+    return templates.TemplateResponse(
+        "random.html",
+        {"request": request, "timestamp": request.state.timestamp}
+    )
 
 @app.get("/admin", response_class=HTMLResponse)
 def admin_page(request: Request):
-    return templates.TemplateResponse("admin.html", {"request": request})
+    return templates.TemplateResponse(
+        "admin.html",
+        {"request": request, "timestamp": request.state.timestamp}
+    )
 
 # -------------------- API QUIZZES --------------------
 @app.get("/api/quizzes")

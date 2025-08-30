@@ -13,7 +13,6 @@ let allQuizzes = [];
 let currentQuestions = [];
 let currentMode = "quiz"; // "quiz" -> quay chọn quiz, "question" -> quay chọn câu hỏi
 let selectedQuiz = null;
-console.log("Hello");
 
 function initGameState() {
   const raw = sessionStorage.getItem("quizGameState");
@@ -94,8 +93,10 @@ function drawWheel(labels) {
 function pickResult(labels) {
   const n = labels.length;
   const arc = (2 * Math.PI) / n;
-  let selected = Math.floor(((angle % (2 * Math.PI)) / arc));
-  selected = (n - selected) % n; // đảo để trúng phần ở 12h
+  // Kim ở bên phải (3h) = góc 0 rad
+  let adjustedAngle = (angle + 2*Math.PI) % (2*Math.PI) + arc;
+  let selected = Math.floor(adjustedAngle / arc);
+  selected = (n - selected) % n; // đảo lại vì quay ngược
   return selected;
 }
 

@@ -65,58 +65,86 @@ async function deleteQuiz(id) {
   loadQuizzes();
 }
 
-// Select quiz
+// Select quiz -> hiển thị câu hỏi trong popup
 async function selectQuiz(id, name) {
   selectedQuiz = id;
-  document.getElementById("selectedQuizName").textContent = name;
-  document.getElementById("addQuestionBtn").disabled = false;
-  document.getElementById("addQuestionBtn").onclick = showAddQuestion;
+  document.getElementById("viewQuizName").textContent = name;
   const res = await fetch(`${API_BASE_URL}/api/questions/${id}`);
   const questions = await res.json();
-  const list = document.getElementById("questionList");
-  console.log("Questions loaded:", questions);
+  const list = document.getElementById("viewQuestionList");
   list.innerHTML = "";
   questions.forEach((q, idx) => {
     const li = document.createElement("li");
-    li.className = "list-group-item";
+    li.className = "list-group-item d-flex justify-content-between align-items-start";
     li.innerHTML = `
-      <span>${idx+1}. ${q.question_text}</span>
+      <div>
+        <strong>${idx + 1}.</strong> ${q.question_text || q.question}
+        <br><small>Loại: ${q.question_type}</small>
+        <br><small>Đáp án đúng: <b>${q.correct_answer}</b></small>
+      </div>
       <div>
         <button class="btn btn-sm btn-outline-warning" onclick="editQuestion(${q.id})">Sửa</button>
         <button class="btn btn-sm btn-outline-danger" onclick="deleteQuestion(${q.id})">Xóa</button>
-      </div>`;
+      </div>
+    `;
     list.appendChild(li);
   });
+  const modal = new bootstrap.Modal(document.getElementById("viewQuestionsModal"));
+  modal.show();
 }
 
-// Show add question modal
+// Reset form thêm câu hỏi
 function showAddQuestion() {
-  document.getElementById("optionsBox").innerHTML = "";
-  addOptionField();
+  document.getElementById("qText").value = "";
+  document.getElementById("correctAnswer").value = "";
+  document.getElementById("qType").value = "mcq";
+  renderOptionsByType();
   new bootstrap.Modal(document.getElementById("questionModal")).show();
 }
 
-// Add option input
-let optionCount = 0;
-function addOptionField() {
-  optionCount++;
-  const div = document.createElement("div");
-  div.className = "input-group mb-2";
-  div.innerHTML = `
-    <span class="input-group-text">${String.fromCharCode(64+optionCount)}</span>
-    <input type="text" class="form-control optionInput">
-  `;
-  document.getElementById("optionsBox").appendChild(div);
+// Render option cho thêm mới
+function renderOptionsByType() {
+  const type = document.getElementById("qType").value;
+  const box = document.getElementById("optionsBox");
+  box.innerHTML = "";
+  if (type === "mcq") {
+    ["A","B","C","D"].forEach(letter => {
+      const div = document.createElement("div");
+      div.className = "input-group mb-2";
+      div.innerHTML = `
+        <span class="input-group-text">${letter}</span>
+        <input type="text" class="form-control optionInput">
+      `;
+      box.appendChild(div);
+    });
+  } else if (type === "true_false") {
+    box.innerHTML = `
+      <div class="input-group mb-2">
+        <span class="input-group-text">A</span>
+        <input type="text" class="form-control optionInput" value="True">
+      </div>
+      <div class="input-group mb-2">
+        <span class="input-group-text">B</span>
+        <input type="text" class="form-control optionInput" value="False">
+      </div>
+    `;
+  } else {
+    box.innerHTML = `<p class="text-muted">Loại này không có lựa chọn, người chơi nhập tự do.</p>`;
+  }
 }
 
 // Add question
 async function addQuestion() {
   const text = document.getElementById("qText").value;
-  const optionInputs = document.querySelectorAll(".optionInput");
-  let options = {};
-  optionInputs.forEach((inp, idx) => {
-    options[String.fromCharCode(65+idx)] = inp.value;
-  });
+  const type = document.getElementById("qType").value;
+  let options = null;
+  if (type !== "note") {
+    const optionInputs = document.querySelectorAll(".optionInput");
+    options = {};
+    optionInputs.forEach((inp, idx) => {
+      options[String.fromCharCode(65+idx)] = inp.value;
+    });
+  }
   const correct = document.getElementById("correctAnswer").value;
   await fetch(`${API_BASE_URL}/api/questions`, {
     method: "POST",
@@ -124,13 +152,13 @@ async function addQuestion() {
     body: JSON.stringify({
       quiz_id: selectedQuiz,
       question_text: text,
-      question_type: "mcq",
+      question_type: type,
       options,
       correct_answer: correct
     })
   });
   bootstrap.Modal.getInstance(document.getElementById("questionModal")).hide();
-  selectQuiz(selectedQuiz, document.getElementById("selectedQuizName").textContent);
+  selectQuiz(selectedQuiz, document.getElementById("viewQuizName").textContent);
 }
 
 // Edit question
@@ -138,48 +166,79 @@ async function editQuestion(id) {
   editingQuestionId = id;
   const res = await fetch(`${API_BASE_URL}/api/question/${id}`);
   const q = await res.json();
-  document.getElementById("editQText").value = q.question_text;
-  document.getElementById("editOptionsBox").innerHTML = "";
-  Object.entries(q.options).forEach(([key,val]) => {
-    const div = document.createElement("div");
-    div.className = "input-group mb-2";
-    div.innerHTML = `
-      <span class="input-group-text">${key}</span>
-      <input type="text" class="form-control editOptionInput" data-key="${key}" value="${val}">
-    `;
-    document.getElementById("editOptionsBox").appendChild(div);
-  });
-  document.getElementById("editCorrectAnswer").value = q.correct_answer;
+  document.getElementById("editQText").value = q.question_text || q.question || "";
+  document.getElementById("editQType").value = q.question_type || "mcq";
+  renderEditOptionsByType(q.options);
+  document.getElementById("editCorrectAnswer").value = q.correct_answer || "";
   new bootstrap.Modal(document.getElementById("editQuestionModal")).show();
 }
 
+// Render option cho sửa
+function renderEditOptionsByType(existingOptions=null) {
+  const type = document.getElementById("editQType").value;
+  const box = document.getElementById("editOptionsBox");
+  box.innerHTML = "";
+  if (type === "mcq") {
+    ["A","B","C","D"].forEach(letter => {
+      const value = existingOptions ? existingOptions[letter] || "" : "";
+      const div = document.createElement("div");
+      div.className = "input-group mb-2";
+      div.innerHTML = `
+        <span class="input-group-text">${letter}</span>
+        <input type="text" class="form-control editOptionInput" data-key="${letter}" value="${value}">
+      `;
+      box.appendChild(div);
+    });
+  } else if (type === "true_false") {
+    const trueVal = existingOptions ? existingOptions["A"] || "True" : "True";
+    const falseVal = existingOptions ? existingOptions["B"] || "False" : "False";
+    box.innerHTML = `
+      <div class="input-group mb-2">
+        <span class="input-group-text">A</span>
+        <input type="text" class="form-control editOptionInput" data-key="A" value="${trueVal}">
+      </div>
+      <div class="input-group mb-2">
+        <span class="input-group-text">B</span>
+        <input type="text" class="form-control editOptionInput" data-key="B" value="${falseVal}">
+      </div>
+    `;
+  } else {
+    box.innerHTML = `<p class="text-muted">Loại này không có lựa chọn, người chơi nhập tự do.</p>`;
+  }
+}
+
+// Update question
 async function updateQuestion() {
   const text = document.getElementById("editQText").value;
-  const optionInputs = document.querySelectorAll(".editOptionInput");
-  let options = {};
-  optionInputs.forEach(inp => {
-    options[inp.dataset.key] = inp.value;
-  });
+  const type = document.getElementById("editQType").value;
+  let options = null;
+  if (type !== "note") {
+    const optionInputs = document.querySelectorAll(".editOptionInput");
+    options = {};
+    optionInputs.forEach(inp => {
+      options[inp.dataset.key] = inp.value;
+    });
+  }
   const correct = document.getElementById("editCorrectAnswer").value;
   await fetch(`${API_BASE_URL}/api/questions/${editingQuestionId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       question_text: text,
-      question_type: "mcq",
+      question_type: type,
       options,
       correct_answer: correct
     })
   });
   bootstrap.Modal.getInstance(document.getElementById("editQuestionModal")).hide();
-  selectQuiz(selectedQuiz, document.getElementById("selectedQuizName").textContent);
+  selectQuiz(selectedQuiz, document.getElementById("viewQuizName").textContent);
 }
 
 // Delete question
 async function deleteQuestion(id) {
   if (!confirm("Xóa câu hỏi này?")) return;
   await fetch(`${API_BASE_URL}/api/questions/${id}`, { method: "DELETE" });
-  selectQuiz(selectedQuiz, document.getElementById("selectedQuizName").textContent);
+  selectQuiz(selectedQuiz, document.getElementById("viewQuizName").textContent);
 }
 
 window.onload = loadQuizzes;
