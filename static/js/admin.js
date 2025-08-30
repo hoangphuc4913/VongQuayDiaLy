@@ -3,6 +3,19 @@ let selectedQuiz = null;
 let editingQuizId = null;
 let editingQuestionId = null;
 
+// giữ instance của modal
+let questionModal;
+let editQModal;
+let viewQuestionsModal;
+
+// Khi DOM sẵn sàng thì khởi tạo modal
+window.addEventListener("DOMContentLoaded", () => {
+  questionModal = new bootstrap.Modal(document.getElementById("questionModal"));
+  editQModal = new bootstrap.Modal(document.getElementById("editQuestionModal"));
+  viewQuestionsModal = new bootstrap.Modal(document.getElementById("viewQuestionsModal"));
+  loadQuizzes();
+});
+
 // Load quizzes
 async function loadQuizzes() {
   const res = await fetch(`${API_BASE_URL}/api/quizzes`);
@@ -11,7 +24,7 @@ async function loadQuizzes() {
   list.innerHTML = "";
   quizzes.forEach(q => {
     const li = document.createElement("li");
-    li.className = "list-group-item";
+    li.className = "list-group-item d-flex justify-content-between align-items-center";
     li.innerHTML = `
       <span>${q.name}</span>
       <div>
@@ -69,28 +82,8 @@ async function deleteQuiz(id) {
 async function selectQuiz(id, name) {
   selectedQuiz = id;
   document.getElementById("viewQuizName").textContent = name;
-  const res = await fetch(`${API_BASE_URL}/api/questions/${id}`);
-  const questions = await res.json();
-  const list = document.getElementById("viewQuestionList");
-  list.innerHTML = "";
-  questions.forEach((q, idx) => {
-    const li = document.createElement("li");
-    li.className = "list-group-item d-flex justify-content-between align-items-start";
-    li.innerHTML = `
-      <div>
-        <strong>${idx + 1}.</strong> ${q.question_text || q.question}
-        <br><small>Loại: ${q.question_type}</small>
-        <br><small>Đáp án đúng: <b>${q.correct_answer}</b></small>
-      </div>
-      <div>
-        <button class="btn btn-sm btn-outline-warning" onclick="editQuestion(${q.id})">Sửa</button>
-        <button class="btn btn-sm btn-outline-danger" onclick="deleteQuestion(${q.id})">Xóa</button>
-      </div>
-    `;
-    list.appendChild(li);
-  });
-  const modal = new bootstrap.Modal(document.getElementById("viewQuestionsModal"));
-  modal.show();
+  await refreshQuestionList();
+  viewQuestionsModal.show();
 }
 
 // Reset form thêm câu hỏi
@@ -99,7 +92,7 @@ function showAddQuestion() {
   document.getElementById("correctAnswer").value = "";
   document.getElementById("qType").value = "mcq";
   renderOptionsByType();
-  new bootstrap.Modal(document.getElementById("questionModal")).show();
+  questionModal.show();
 }
 
 // Render option cho thêm mới
@@ -146,6 +139,7 @@ async function addQuestion() {
     });
   }
   const correct = document.getElementById("correctAnswer").value;
+
   await fetch(`${API_BASE_URL}/api/questions`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -157,9 +151,9 @@ async function addQuestion() {
       correct_answer: correct
     })
   });
-  bootstrap.Modal.getInstance(document.getElementById("questionModal")).hide();
-  questionModal.hide();
-  selectQuiz(selectedQuiz, document.getElementById("viewQuizName").textContent);
+
+  questionModal.hide();   // đóng modal thêm câu hỏi
+  refreshQuestionList();  // update luôn danh sách đang mở
 }
 
 // Edit question
@@ -171,7 +165,7 @@ async function editQuestion(id) {
   document.getElementById("editQType").value = q.question_type || "mcq";
   renderEditOptionsByType(q.options);
   document.getElementById("editCorrectAnswer").value = q.correct_answer || "";
-  new bootstrap.Modal(document.getElementById("editQuestionModal")).show();
+  editQModal.show();
 }
 
 // Render option cho sửa
@@ -231,15 +225,37 @@ async function updateQuestion() {
       correct_answer: correct
     })
   });
-  bootstrap.Modal.getInstance(document.getElementById("editQuestionModal")).hide();
-  selectQuiz(selectedQuiz, document.getElementById("viewQuizName").textContent);
+  editQModal.hide();   // đóng modal sửa
+  refreshQuestionList();
 }
 
 // Delete question
 async function deleteQuestion(id) {
   if (!confirm("Xóa câu hỏi này?")) return;
   await fetch(`${API_BASE_URL}/api/questions/${id}`, { method: "DELETE" });
-  selectQuiz(selectedQuiz, document.getElementById("viewQuizName").textContent);
+  refreshQuestionList();
 }
 
-window.onload = loadQuizzes;
+async function refreshQuestionList() {
+  if (!selectedQuiz) return;
+  const res = await fetch(`${API_BASE_URL}/api/questions/${selectedQuiz}`);
+  const questions = await res.json();
+  const list = document.getElementById("viewQuestionList");
+  list.innerHTML = "";
+  questions.forEach((q, idx) => {
+    const li = document.createElement("li");
+    li.className = "list-group-item d-flex justify-content-between align-items-start";
+    li.innerHTML = `
+      <div>
+        <strong>${idx + 1}.</strong> ${q.question_text || q.question}
+        <br><small>Loại: ${q.question_type}</small>
+        <br><small>Đáp án đúng: <b>${q.correct_answer}</b></small>
+      </div>
+      <div>
+        <button class="btn btn-sm btn-outline-warning" onclick="editQuestion(${q.id})">Sửa</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteQuestion(${q.id})">Xóa</button>
+      </div>
+    `;
+    list.appendChild(li);
+  });
+}
