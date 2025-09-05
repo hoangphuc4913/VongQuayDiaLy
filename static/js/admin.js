@@ -3,12 +3,10 @@ let selectedQuiz = null;
 let editingQuizId = null;
 let editingQuestionId = null;
 
-// giữ instance của modal
 let questionModal;
 let editQModal;
 let viewQuestionsModal;
 
-// Khi DOM sẵn sàng thì khởi tạo modal
 window.addEventListener("DOMContentLoaded", () => {
   questionModal = new bootstrap.Modal(document.getElementById("questionModal"));
   editQModal = new bootstrap.Modal(document.getElementById("editQuestionModal"));
@@ -16,7 +14,17 @@ window.addEventListener("DOMContentLoaded", () => {
   loadQuizzes();
 });
 
-// Load quizzes
+// ----------------- Helper -----------------
+async function saveToGithub() {
+  try {
+    await fetch(`${API_BASE_URL}/api/save_quiz_file`, { method: "POST" });
+    console.log("✅ Đã commit dữ liệu quiz lên GitHub");
+  } catch (err) {
+    console.error("❌ Lỗi commit GitHub:", err);
+  }
+}
+
+// ----------------- QUIZZES -----------------
 async function loadQuizzes() {
   const res = await fetch(`${API_BASE_URL}/api/quizzes`);
   const quizzes = await res.json();
@@ -36,12 +44,10 @@ async function loadQuizzes() {
   });
 }
 
-// Show add quiz modal
 function showAddQuiz() {
   new bootstrap.Modal(document.getElementById("quizModal")).show();
 }
 
-// Add quiz
 async function addQuiz() {
   const name = document.getElementById("quizName").value;
   await fetch(`${API_BASE_URL}/api/quizzes`, {
@@ -51,9 +57,9 @@ async function addQuiz() {
   });
   bootstrap.Modal.getInstance(document.getElementById("quizModal")).hide();
   loadQuizzes();
+  saveToGithub();
 }
 
-// Edit quiz
 function editQuiz(id, name) {
   editingQuizId = id;
   document.getElementById("editQuizName").value = name;
@@ -69,16 +75,17 @@ async function updateQuiz() {
   });
   bootstrap.Modal.getInstance(document.getElementById("editQuizModal")).hide();
   loadQuizzes();
+  saveToGithub();
 }
 
-// Delete quiz
 async function deleteQuiz(id) {
   if (!confirm("Xóa quiz này?")) return;
   await fetch(`${API_BASE_URL}/api/quizzes/${id}`, { method: "DELETE" });
   loadQuizzes();
+  saveToGithub();
 }
 
-// Select quiz -> hiển thị câu hỏi trong popup
+// ----------------- QUESTIONS -----------------
 async function selectQuiz(id, name) {
   selectedQuiz = id;
   document.getElementById("viewQuizName").textContent = name;
@@ -86,7 +93,6 @@ async function selectQuiz(id, name) {
   viewQuestionsModal.show();
 }
 
-// Reset form thêm câu hỏi
 function showAddQuestion() {
   document.getElementById("qText").value = "";
   document.getElementById("correctAnswer").value = "";
@@ -95,7 +101,6 @@ function showAddQuestion() {
   questionModal.show();
 }
 
-// Render option cho thêm mới
 function renderOptionsByType() {
   const type = document.getElementById("qType").value;
   const box = document.getElementById("optionsBox");
@@ -126,7 +131,6 @@ function renderOptionsByType() {
   }
 }
 
-// Add question
 async function addQuestion() {
   const text = document.getElementById("qText").value;
   const type = document.getElementById("qType").value;
@@ -152,11 +156,11 @@ async function addQuestion() {
     })
   });
 
-  questionModal.hide();   // đóng modal thêm câu hỏi
-  refreshQuestionList();  // update luôn danh sách đang mở
+  questionModal.hide();
+  refreshQuestionList();
+  saveToGithub();
 }
 
-// Edit question
 async function editQuestion(id) {
   editingQuestionId = id;
   const res = await fetch(`${API_BASE_URL}/api/question/${id}`);
@@ -168,7 +172,6 @@ async function editQuestion(id) {
   editQModal.show();
 }
 
-// Render option cho sửa
 function renderEditOptionsByType(existingOptions=null) {
   const type = document.getElementById("editQType").value;
   const box = document.getElementById("editOptionsBox");
@@ -202,7 +205,6 @@ function renderEditOptionsByType(existingOptions=null) {
   }
 }
 
-// Update question
 async function updateQuestion() {
   const text = document.getElementById("editQText").value;
   const type = document.getElementById("editQType").value;
@@ -215,6 +217,7 @@ async function updateQuestion() {
     });
   }
   const correct = document.getElementById("editCorrectAnswer").value;
+
   await fetch(`${API_BASE_URL}/api/questions/${editingQuestionId}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -225,15 +228,17 @@ async function updateQuestion() {
       correct_answer: correct
     })
   });
-  editQModal.hide();   // đóng modal sửa
+
+  editQModal.hide();
   refreshQuestionList();
+  saveToGithub();
 }
 
-// Delete question
 async function deleteQuestion(id) {
   if (!confirm("Xóa câu hỏi này?")) return;
   await fetch(`${API_BASE_URL}/api/questions/${id}`, { method: "DELETE" });
   refreshQuestionList();
+  saveToGithub();
 }
 
 async function refreshQuestionList() {

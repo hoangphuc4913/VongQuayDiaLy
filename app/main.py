@@ -176,3 +176,35 @@ def delete_question(q_id: int):
     conn.commit()
     conn.close()
     return {"status": "deleted"}
+
+import requests, os, base64
+
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+REPO = "username/quiz-repo"
+BRANCH = "main"
+
+def update_file_on_github(path, content, message="Update quiz data"):
+    url = f"https://api.github.com/repos/{REPO}/contents/{path}"
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+
+    # Lấy SHA cũ
+    r = requests.get(url, headers=headers)
+    sha = r.json().get("sha")
+
+    data = {
+        "message": message,
+        "content": base64.b64encode(content.encode()).decode(),
+        "branch": BRANCH
+    }
+    if sha:
+        data["sha"] = sha
+
+    res = requests.put(url, headers=headers, json=data)
+    return res.json()
+
+@app.post("/api/save_quiz_file")
+def save_quiz_file():
+    with open("quiz.sql") as f:
+        content = f.read()
+    result = update_file_on_github("quiz.sql", content, "Update quiz.sql")
+    return result
