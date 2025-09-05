@@ -17,8 +17,9 @@ window.addEventListener("DOMContentLoaded", () => {
 // ----------------- Helper -----------------
 async function saveToGithub() {
   try {
-    await fetch(`${API_BASE_URL}/api/save_quiz_file`, { method: "POST" });
-    console.log("✅ Đã commit dữ liệu quiz lên GitHub");
+    const res = await fetch(`${API_BASE_URL}/api/save_quiz_file`, { method: "POST" });
+    const data = await res.json();
+    console.log("✅ Commit kết quả:", data);
   } catch (err) {
     console.error("❌ Lỗi commit GitHub:", err);
   }
