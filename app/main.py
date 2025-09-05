@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import sqlite3, json, os
+import sqlite3, json, os, requests, base64
 from starlette.responses import Response
 app = FastAPI()
 
@@ -177,23 +177,26 @@ def delete_question(q_id: int):
     conn.close()
     return {"status": "deleted"}
 
-import requests, os, base64
-
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # PAT lưu trong Render env
 REPO = "username/quiz-repo"
 BRANCH = "main"
 
-def update_file_on_github(path, content, message="Update quiz data"):
+def commit_file_to_github(path, message):
     url = f"https://api.github.com/repos/{REPO}/contents/{path}"
     headers = {"Authorization": f"token {GITHUB_TOKEN}"}
 
-    # Lấy SHA cũ
+    # lấy SHA cũ (nếu file đã tồn tại)
     r = requests.get(url, headers=headers)
-    sha = r.json().get("sha")
+    sha = None
+    if r.status_code == 200:
+        sha = r.json()["sha"]
+
+    with open(path, "rb") as f:
+        content = base64.b64encode(f.read()).decode()
 
     data = {
         "message": message,
-        "content": base64.b64encode(content.encode()).decode(),
+        "content": content,
         "branch": BRANCH
     }
     if sha:
@@ -204,7 +207,7 @@ def update_file_on_github(path, content, message="Update quiz data"):
 
 @app.post("/api/save_quiz_file")
 def save_quiz_file():
-    with open("quiz.sql") as f:
-        content = f.read()
-    result = update_file_on_github("quiz.sql", content, "Update quiz.sql")
-    return result
+    # commit cả file SQL và DB
+    res_sql = commit_file_to_github("quiz.sql", "Update quiz.sql")
+    res_db = commit_file_to_github("quiz.db", "Update quiz.db")
+    return {"sql": res_sql, "db": res_db}
