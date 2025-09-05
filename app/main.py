@@ -178,7 +178,7 @@ def delete_question(q_id: int):
     return {"status": "deleted"}
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # PAT lưu trong Render env
-REPO = "username/quiz-repo"
+REPO = "hoangphuc4913/VongQuayDiaLy"
 BRANCH = "main"
 
 def commit_file_to_github(path, message):
@@ -210,4 +210,4 @@ def save_quiz_file():
     # commit cả file SQL và DB
     res_sql = commit_file_to_github("quiz.sql", "Update quiz.sql")
     res_db = commit_file_to_github("quiz.db", "Update quiz.db")
-    return {"sql": res_sql, "db": res_db}
+    return {"sql": res_sql, "db": res_db, "token": GITHUB_TOKEN}

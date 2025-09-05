@@ -268,7 +268,3 @@ async function refreshQuestionList() {
     list.appendChild(li);
   });
 }
-
-document.getElementById("viewQuestionsModal").addEventListener("hidden.bs.modal", () => {
-  document.activeElement.blur();
-});
