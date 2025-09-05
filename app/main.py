@@ -207,7 +207,5 @@ def commit_file_to_github(path, message):
 
 @app.post("/api/save_quiz_file")
 def save_quiz_file():
-    # commit cả file SQL và DB
-    res_sql = commit_file_to_github("quiz.sql", "Update quiz.sql")
     res_db = commit_file_to_github("quiz.db", "Update quiz.db")
-    return {"sql": res_sql, "db": res_db}
+    return {"db": res_db}
