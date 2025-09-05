@@ -56,6 +56,7 @@ async function addQuiz() {
     body: JSON.stringify({ name })
   });
   bootstrap.Modal.getInstance(document.getElementById("quizModal")).hide();
+  document.activeElement.blur();
   loadQuizzes();
   saveToGithub();
 }
@@ -74,6 +75,7 @@ async function updateQuiz() {
     body: JSON.stringify({ name })
   });
   bootstrap.Modal.getInstance(document.getElementById("editQuizModal")).hide();
+  document.activeElement.blur();
   loadQuizzes();
   saveToGithub();
 }
@@ -157,6 +159,7 @@ async function addQuestion() {
   });
 
   questionModal.hide();
+  document.activeElement.blur();
   refreshQuestionList();
   saveToGithub();
 }
@@ -230,6 +233,7 @@ async function updateQuestion() {
   });
 
   editQModal.hide();
+  document.activeElement.blur();
   refreshQuestionList();
   saveToGithub();
 }
