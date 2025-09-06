@@ -185,7 +185,12 @@ RENDER_SERVICE_ID = "srv-d2hcps0gjchc73c2076g"
 
 def commit_file_to_github(path, message):
     url = f"https://api.github.com/repos/{REPO}/contents/{path}"
-    headers = {"Authorization": f"token {GITHUB_TOKEN}"}
+    headers = {
+        "Authorization": f"Bearer ${GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+        "Content-Type": "application/json"
+    }
+
 
     # lấy SHA cũ (nếu file đã tồn tại)
     r = requests.get(url, headers=headers)
