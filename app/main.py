@@ -225,7 +225,7 @@ async def save_quiz_file():
                 headers=render_headers,
             )
             data = r.json()
-            deploy_status = data[0]["status"]
+            deploy_status = (data.get("data") or [{}])[0].get("status")
 
             # Nếu deploy kết thúc (thành công hoặc fail hoặc bị hủy)
             if deploy_status in ["live", "canceled", "failed"]:
