@@ -186,7 +186,7 @@ RENDER_SERVICE_ID = "srv-d2hcps0gjchc73c2076g"
 def commit_file_to_github(path, message):
     url = f"https://api.github.com/repos/{REPO}/contents/{path}"
     headers = {
-        "Authorization": f"Bearer ${GITHUB_TOKEN}",
+        "Authorization": f"token {GITHUB_TOKEN}",  # token, không phải Bearer
         "Accept": "application/vnd.github+json",
         "Content-Type": "application/json"
     }
@@ -209,7 +209,8 @@ def commit_file_to_github(path, message):
         data["sha"] = sha
 
     res = requests.put(url, headers=headers, json=data)
-    print(res.json())
+    print("GitHub status:", res.status_code)
+    print("GitHub response:", res.text)
     return res.json()
 
 @app.post("/api/save_quiz_file")
