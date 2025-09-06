@@ -4,3 +4,5 @@ jinja2
 aiofiles
 python-multipart
 requests
+httpx
+asyncio
