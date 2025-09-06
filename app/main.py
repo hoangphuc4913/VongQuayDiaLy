@@ -210,6 +210,7 @@ def commit_file_to_github(path, message):
         data["sha"] = sha
 
     res = requests.put(url, headers=headers, json=data)
+    print(res.json())
     return res.json()
 
 @app.post("/api/save_quiz_file")
@@ -225,7 +226,8 @@ async def save_quiz_file():
                 headers=render_headers,
             )
             data = r.json()
-            deploy_status = (data.get("data") or [{}])[0].get("status")
+            print("Render deploys response:", data)
+            deploy_status = data["data"][0]["status"]
 
             # Nếu deploy kết thúc (thành công hoặc fail hoặc bị hủy)
             if deploy_status in ["live", "canceled", "failed"]:
