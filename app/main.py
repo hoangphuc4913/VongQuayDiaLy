@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-import sqlite3, json, os, requests, base64
+import sqlite3, json, os, requests, base64, httpx, asyncio
 from starlette.responses import Response
 app = FastAPI()
 
@@ -178,8 +178,10 @@ def delete_question(q_id: int):
     return {"status": "deleted"}
 
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # PAT lưu trong Render env
+RENDER_TOKEN = os.getenv("RENDER_TOKEN")
 REPO = "hoangphuc4913/VongQuayDiaLy"
 BRANCH = "main"
+RENDER_SERVICE_ID = "srv-d2hcps0gjchc73c2076g"
 
 def commit_file_to_github(path, message):
     url = f"https://api.github.com/repos/{REPO}/contents/{path}"
@@ -206,6 +208,26 @@ def commit_file_to_github(path, message):
     return res.json()
 
 @app.post("/api/save_quiz_file")
-def save_quiz_file():
+async def save_quiz_file():
     res_db = commit_file_to_github("quiz.db", "Update quiz.db")
-    return {"db": res_db}
+    render_headers = {"Authorization": f"Bearer {RENDER_TOKEN}"}
+    final_status = None
+
+    async with httpx.AsyncClient() as client:
+        while True:
+            r = await client.get(
+                f"https://api.render.com/v1/services/{RENDER_SERVICE_ID}/deploys",
+                headers=render_headers,
+            )
+            data = r.json()
+            deploy_status = data[0]["status"]
+
+            # Nếu deploy kết thúc (thành công hoặc fail hoặc bị hủy)
+            if deploy_status in ["live", "canceled", "failed"]:
+                final_status = deploy_status
+                break
+
+            # Nếu chưa xong thì chờ 5s check lại
+            await asyncio.sleep(5)
+
+    return {"status": final_status, "db":res_db}

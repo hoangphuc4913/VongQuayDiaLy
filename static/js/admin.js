@@ -14,19 +14,6 @@ window.addEventListener("DOMContentLoaded", () => {
   loadQuizzes();
 });
 
-// ----------------- Helper -----------------
-async function saveToGithub() {
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/save_quiz_file`, { method: "POST" });
-    const data = await res.json();
-    console.log("✅ Commit kết quả:", data);
-    return true;
-  } catch (err) {
-    console.error("❌ Lỗi commit GitHub:", err);
-    return false;
-  }
-}
-
 // ----------------- QUIZZES -----------------
 async function loadQuizzes() {
   const res = await fetch(`${API_BASE_URL}/api/quizzes`);
@@ -266,8 +253,27 @@ async function refreshQuestionList() {
   });
 }
 
+// ----------------- Helper -----------------
+async function saveToGithub() {
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/save_quiz_file`, { method: "POST" });
+    const data = await res.json();
+    console.log("✅ Commit kết quả:", data);
+  } catch (err) {
+    console.error("❌ Lỗi commit GitHub:", err);
+  }
+  return data.status;
+}
+
 document.getElementById("saveBtn").addEventListener("click", function(){
   this.style.opacity = 0.5;
-  alert(saveToGithub() ? "Lưu thành công ✅" : "Lưu thất bại ❌");
+  let status = saveToGithub();
+  if (status == "live"){
+    alert("Lưu thành công ✅")
+  } else if (status == "cancelled"){
+    alert("Lưu bị hủy. Thử lưu lại sau vài phút. ⚠️")
+  } else {
+    alert("Lưu thất bại ❌")
+  }
   this.style.opacity = 1;
 });
