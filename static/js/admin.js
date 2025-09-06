@@ -266,15 +266,22 @@ async function saveToGithub() {
   }
 }
 
-document.getElementById("saveBtn").addEventListener("click", function(){
+document.getElementById("saveBtn").addEventListener("click", async function() {
   this.style.opacity = 0.5;
-  let status = saveToGithub();
-  if (status == "live"){
-    alert("Lưu thành công ✅")
-  } else if (status == "cancelled"){
-    alert("Lưu bị hủy. Thử lưu lại sau vài phút. ⚠️")
-  } else {
-    alert("Lưu thất bại ❌")
+
+  try {
+    let status = await saveToGithub();  // await giờ hợp lệ
+    if (status === "live") {
+      alert("Lưu thành công ✅");
+    } else if (status === "cancelled") {
+      alert("Lưu bị hủy. Thử lưu lại sau vài phút. ⚠️");
+    } else {
+      alert("Lưu thất bại ❌");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Có lỗi xảy ra khi lưu ❌");
   }
+
   this.style.opacity = 1;
 });
