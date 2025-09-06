@@ -20,8 +20,10 @@ async function saveToGithub() {
     const res = await fetch(`${API_BASE_URL}/api/save_quiz_file`, { method: "POST" });
     const data = await res.json();
     console.log("✅ Commit kết quả:", data);
+    return true;
   } catch (err) {
     console.error("❌ Lỗi commit GitHub:", err);
+    return false;
   }
 }
 
@@ -59,7 +61,6 @@ async function addQuiz() {
   bootstrap.Modal.getInstance(document.getElementById("quizModal")).hide();
   document.activeElement.blur();
   loadQuizzes();
-  saveToGithub();
 }
 
 function editQuiz(id, name) {
@@ -78,14 +79,12 @@ async function updateQuiz() {
   bootstrap.Modal.getInstance(document.getElementById("editQuizModal")).hide();
   document.activeElement.blur();
   loadQuizzes();
-  saveToGithub();
 }
 
 async function deleteQuiz(id) {
   if (!confirm("Xóa quiz này?")) return;
   await fetch(`${API_BASE_URL}/api/quizzes/${id}`, { method: "DELETE" });
   loadQuizzes();
-  saveToGithub();
 }
 
 // ----------------- QUESTIONS -----------------
@@ -162,7 +161,6 @@ async function addQuestion() {
   questionModal.hide();
   document.activeElement.blur();
   refreshQuestionList();
-  saveToGithub();
 }
 
 async function editQuestion(id) {
@@ -236,14 +234,12 @@ async function updateQuestion() {
   editQModal.hide();
   document.activeElement.blur();
   refreshQuestionList();
-  saveToGithub();
 }
 
 async function deleteQuestion(id) {
   if (!confirm("Xóa câu hỏi này?")) return;
   await fetch(`${API_BASE_URL}/api/questions/${id}`, { method: "DELETE" });
   refreshQuestionList();
-  saveToGithub();
 }
 
 async function refreshQuestionList() {
@@ -269,3 +265,9 @@ async function refreshQuestionList() {
     list.appendChild(li);
   });
 }
+
+document.getElementById("saveBtn").addEventListener("click", function(){
+  this.style.opacity = 0.5;
+  alert(saveToGithub() ? "Lưu thành công ✅" : "Lưu thất bại ❌");
+  this.style.opacity = 1;
+});
