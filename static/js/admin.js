@@ -259,10 +259,11 @@ async function saveToGithub() {
     const res = await fetch(`${API_BASE_URL}/api/save_quiz_file`, { method: "POST" });
     const data = await res.json();
     console.log("✅ Commit kết quả:", data);
+    return data.status;
   } catch (err) {
     console.error("❌ Lỗi commit GitHub:", err);
+    return "fail";
   }
-  return data.status;
 }
 
 document.getElementById("saveBtn").addEventListener("click", function(){
