@@ -228,6 +228,7 @@ async def save_quiz_file():
             data = r.json()
             print("Render deploys response:", data)
             deploy_status = data[0]["deploy"]["status"]
+            print("Status: ", deploy_status)
 
             # Nếu deploy kết thúc (thành công hoặc fail hoặc bị hủy)
             if deploy_status in ["live", "canceled", "failed"]:
