@@ -257,7 +257,16 @@ async function refreshQuestionList() {
 async function saveToGithub() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/save_quiz_file`, { method: "POST" });
-    const data = await res.json();
+    console.log(res);
+    const contentType = res.headers.get("content-type");
+    let data;
+    if (contentType && contentType.includes("application/json")) {
+      data = await res.json();
+    } else {
+      // Không phải JSON, có thể xử lý khác
+      const text = await res.text();
+      console.log("Response không phải JSON:", text);
+    }
     console.log("✅ Commit kết quả:", data);
     return data.status;
   } catch (err) {

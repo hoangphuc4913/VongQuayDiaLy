@@ -226,7 +226,6 @@ async def save_quiz_file():
                 headers=render_headers,
             )
             data = r.json()
-            print("Render deploys response:", data)
             deploy_status = data[0]["deploy"]["status"]
             print("Status: ", deploy_status)
 
