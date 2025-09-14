@@ -173,7 +173,7 @@ function checkAnswer(index) {
     const sel = document.querySelector('input[name="answer"]:checked');
     if (sel && sel.value === q.correct_answer) isCorrect = true;
   }
-  alert(isCorrect ? "✅ Correct!" : "❌ Wrong!");
+  alert(isCorrect ? "✅ Đúng rồi!" : "❌ Sai rồi!");
   document.getElementById("popup").classList.remove("active");
   awardAndAdvance(isCorrect);
 }
