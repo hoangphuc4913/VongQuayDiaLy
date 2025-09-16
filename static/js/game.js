@@ -71,7 +71,7 @@ function loadQuiz(quizId) {
             for (let i = 0; i < data.length; i++) {
                 const btn = document.createElement("button");
                 btn.className = "btn btn-outline-secondary btn-quiz";
-                btn.innerText = "Q" + (i + 1);
+                btn.innerText = "Câu " + (i + 1);
                 btn.onclick = () => showQuestion(i);
                 container.appendChild(btn);
             }

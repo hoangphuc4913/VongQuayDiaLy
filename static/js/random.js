@@ -62,7 +62,7 @@ async function fetchQuestions(quizId) {
   const res = await fetch(`${API_BASE_URL}/api/questions/${quizId}`);
   const data = await res.json();
   currentQuestions = data;
-  drawWheel(data.map((q,i)=>`Q${i+1}`));
+  drawWheel(data.map((q,i)=>`Câu ${i+1}`));
 }
 
 function drawWheel(labels) {
@@ -118,7 +118,9 @@ function spinWheel() {
     if (currentMode === "quiz") {
       drawWheel(allQuizzes.map(q=>q.name));
     } else {
-      drawWheel(currentQuestions.map((q,i)=>`Q${i+1}`));
+      setTimeout(() => {
+        drawWheel(currentQuestions.map((q,i)=>`Câu ${i+1}`));
+      }, 3000); // 3000 ms = 3s
     }
     if (t < 1) {
       requestAnimationFrame(animate);
@@ -132,7 +134,7 @@ function spinWheel() {
         currentMode = "question";
         fetchQuestions(selectedQuiz.id);
       } else {
-        idx = pickResult(currentQuestions.map((q,i)=>`Q${i+1}`));
+        idx = pickResult(currentQuestions.map((q,i)=>`Câu ${i+1}`));
         showQuestion(idx);
       }
     }
