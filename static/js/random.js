@@ -116,11 +116,11 @@ function spinWheel() {
     angle = finalAngle * eased;
     ctx.clearRect(0,0,canvas.width,canvas.height);
     if (currentMode === "quiz") {
-      drawWheel(allQuizzes.map(q=>q.name));
-    } else {
       setTimeout(() => {
-        drawWheel(currentQuestions.map((q,i)=>`Câu ${i+1}`));
-      }, 3000); // 3000 ms = 3s
+        drawWheel(allQuizzes.map(q=>q.name));
+      }, 3000);
+    } else {
+      drawWheel(currentQuestions.map((q,i)=>`Câu ${i+1}`));
     }
     if (t < 1) {
       requestAnimationFrame(animate);
