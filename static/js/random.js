@@ -108,35 +108,51 @@ function spinWheel() {
   let duration = 4000;
   let start = null;
 
+  const labelEl = document.getElementById("selectedQuizName");
+
   function animate(ts) {
     if (!start) start = ts;
     let progress = ts - start;
     let t = Math.min(progress / duration, 1);
-    let eased = 1 - Math.pow(1 - t, 3); // easing out
+    let eased = 1 - Math.pow(1 - t, 3);
     angle = finalAngle * eased;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (currentMode === "quiz") {
-      drawWheel(allQuizzes.map(q=>q.name));
+      drawWheel(allQuizzes.map(q => q.name));
+      labelEl.style.display = "none";
     } else {
-      drawWheel(currentQuestions.map((q,i)=>`Câu ${i+1}`));
+      drawWheel(currentQuestions.map((q, i) => `Câu ${i + 1}`));
+      labelEl.style.display = "block";
     }
+
     if (t < 1) {
       requestAnimationFrame(animate);
     } else {
       spinning = false;
       let idx;
       if (currentMode === "quiz") {
-        idx = pickResult(allQuizzes.map(q=>q.name));
+        idx = pickResult(allQuizzes.map(q => q.name));
         selectedQuiz = allQuizzes[idx];
         console.log("Quiz: ", selectedQuiz);
-        currentMode = "question";
-        fetchQuestions(selectedQuiz.id);
+        // Hiện tên tỉnh
+        if(selectedQuiz.name=="Bất ngờ chưa!") labelEl.textContent = "Bất ngờ chưa!";
+        else labelEl.textContent = `Tỉnh thành được chọn: ${selectedQuiz.name}`;
+        labelEl.style.display = "block";
+
+        // ⏳ Chờ 3 giây trước khi chuyển sang vòng quay câu hỏi
+        setTimeout(() => {
+          currentMode = "question";
+          fetchQuestions(selectedQuiz.id);
+        }, 1000);
+
       } else {
-        idx = pickResult(currentQuestions.map((q,i)=>`Câu ${i+1}`));
+        idx = pickResult(currentQuestions.map((q, i) => `Câu ${i + 1}`));
         showQuestion(idx);
       }
     }
   }
+
   requestAnimationFrame(animate);
 }
 
@@ -144,22 +160,39 @@ function showQuestion(index) {
   const question = currentQuestions[index];
   const popup = document.getElementById("popup");
   popup.classList.add("active");
-
   const content = document.getElementById("popup-content");
-  content.innerHTML = `<h5>${question.question_text}</h5>`;
+  // 🟢 SPECIAL +/- VALUE (cộng hoặc trừ điểm)
+  const match = question.question_text.match(/([+-]\d+)/);
+  if (match) {
+    const value = parseInt(match[1]); // tự nhận +5 hoặc -5
 
+    let color = value > 0 ? "text-success" : "text-danger";
+    let label = value > 0 ? `+${value} điểm!` : `${value} điểm!`;
+
+    content.innerHTML = `
+      <h3 class="${color}">${label}</h3>
+      <p>${question.question_text}</p>
+      <button class="btn btn-primary mt-3" onclick="specialPlus(${value})">OK</button>
+    `;
+    return;
+  }
+  // 🟡 BÌNH THƯỜNG
+  content.innerHTML = `<h5>${question.question_text}</h5>`;
   if (question.question_type === "mcq" || question.question_type === "true_false") {
     for (let key in question.options) {
       content.innerHTML += `
         <div class="form-check">
           <input class="form-check-input" type="radio" name="answer" value="${key}">
           <label class="form-check-label">${key}: ${question.options[key]}</label>
-        </div>`;
+        </div>
+      `;
     }
   } else {
     content.innerHTML += `<input type="text" class="form-control" id="note-answer">`;
   }
-  content.innerHTML += `<button class="btn btn-success mt-2" onclick="checkAnswer(${index})">Check</button>`;
+  content.innerHTML += `
+    <button class="btn btn-success mt-2" onclick="checkAnswer(${index})">Check</button>
+  `;
 }
 
 function checkAnswer(index) {
@@ -183,3 +216,9 @@ window.onload = async function() {
   await fetchQuizzes();
   document.getElementById("spinBtn").onclick = spinWheel;
 };
+
+function specialPlus(value) {
+  document.getElementById("popup").classList.remove("active");
+  gameState.players[gameState.currentPlayerIndex].score += value;
+  awardAndAdvance(false);
+}
