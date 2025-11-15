@@ -72,7 +72,10 @@ function drawWheel(labels) {
   for (let i = 0; i < n; i++) {
     const start = angle + i * arc;
     ctx.beginPath();
-    ctx.fillStyle = i % 2 === 0 ? "#ffcc66" : "#66ccff";
+    ctx.fillStyle = 
+    (i % 3 === 0) ? "#ffcc66" :
+    (i % 3 === 1) ? "#66ccff" :
+                    "green";
     ctx.moveTo(CENTER, CENTER);
     ctx.arc(CENTER, CENTER, WHEEL_RADIUS, start, start + arc);
     ctx.closePath();
