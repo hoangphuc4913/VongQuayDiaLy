@@ -11,9 +11,13 @@ let spinning = false;
 // Data
 let allQuizzes = [];
 let currentQuestions = [];
-let currentMode = "quiz"; // "quiz" -> quay chọn quiz, "question" -> quay chọn câu hỏi
+let currentMode = "quiz";
 let selectedQuiz = null;
 
+
+/* ============================================================
+   1) KHỞI TẠO GAME
+============================================================ */
 function initGameState() {
   const raw = sessionStorage.getItem("quizGameState");
   if (!raw) { window.location.href = "/home"; return; }
@@ -24,66 +28,131 @@ function initGameState() {
 function renderHeader() {
   document.getElementById('currentPlayerName').textContent =
     gameState.players[gameState.currentPlayerIndex].name;
+
   document.getElementById('roundInfo').textContent =
     `${gameState.currentRound}/${gameState.totalRounds}`;
+
   const sb = document.getElementById('scoreboard');
-  sb.innerHTML = gameState.players.map((p,i) =>
-    `<div class="d-inline-flex align-items-center border rounded px-2 py-1 me-2 mb-2 ${i===gameState.currentPlayerIndex?'bg-warning-subtle':''}">
+  sb.innerHTML = gameState.players.map((p, i) =>
+    `<div class="d-inline-flex align-items-center border rounded px-2 py-1 me-2 mb-2 ${i === gameState.currentPlayerIndex ? 'bg-warning-subtle' : ''}">
        <strong>${p.name}</strong>
        <span class="ms-2 badge bg-dark">${p.score}</span>
      </div>`).join('');
 }
 
+
+/* ============================================================
+   2) CHUYỂN LƯỢT & HOÀN THÀNH GAME
+============================================================ */
 function awardAndAdvance(isCorrect) {
   if (isCorrect) gameState.players[gameState.currentPlayerIndex].score++;
+
   gameState.currentPlayerIndex++;
+
   if (gameState.currentPlayerIndex >= gameState.players.length) {
     gameState.currentPlayerIndex = 0;
     gameState.currentRound++;
+
     if (gameState.currentRound > gameState.totalRounds) {
       sessionStorage.setItem("quizResult", JSON.stringify(gameState.players));
       window.location.href = "/result";
       return;
     }
   }
+
   renderHeader();
-  // Sau khi trả lời xong → quay lại mode quiz
   currentMode = "quiz";
-  drawWheel(allQuizzes.map(q => q.name));
+  drawWheel(distributeSpecialSlots(allQuizzes.map(q => q.name)));
 }
 
+
+/* ============================================================
+   3) API
+============================================================ */
 async function fetchQuizzes() {
   const res = await fetch(`${API_BASE_URL}/api/quizzes`);
   allQuizzes = await res.json();
-  drawWheel(allQuizzes.map(q => q.name));
+
+  const arranged = distributeSpecialSlots(allQuizzes.map(q => q.name));
+  drawWheel(arranged);
 }
 
 async function fetchQuestions(quizId) {
   const res = await fetch(`${API_BASE_URL}/api/questions/${quizId}`);
-  const data = await res.json();
-  currentQuestions = data;
-  drawWheel(data.map((q,i)=>`Câu ${i+1}`));
+  currentQuestions = await res.json();
+
+  const labels = currentQuestions.map((q, i) => `Câu ${i + 1}`);
+  const arranged = distributeSpecialSlots(labels);
+
+  drawWheel(arranged);
 }
 
+
+/* ============================================================
+   4) PHÂN BỐ Ô ĐẶC BIỆT CÁCH ĐỀU
+============================================================ */
+function distributeSpecialSlots(labels) {
+  const specials = labels.filter(txt => txt.includes("+") || txt.includes("-"));
+
+  if (specials.length === 0) return labels;
+
+  const n = labels.length;
+  const s = specials.length;
+
+  const step = Math.floor(n / s);
+  const result = Array(n).fill(null);
+
+  let used = new Set();
+  let positions = [];
+
+  for (let i = 0; i < s; i++) {
+    positions.push((i * step) % n);
+  }
+
+  specials.forEach((sp, idx) => {
+    result[positions[idx]] = sp;
+    used.add(sp);
+  });
+
+  let normalIdx = 0;
+
+  labels.forEach(lbl => {
+    if (!used.has(lbl)) {
+      while (result[normalIdx] !== null) normalIdx++;
+      result[normalIdx] = lbl;
+    }
+  });
+
+  return result;
+}
+
+
+/* ============================================================
+   5) VẼ VÒNG QUAY
+============================================================ */
 function drawWheel(labels) {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
   const n = labels.length;
   const arc = (2 * Math.PI) / n;
+
   for (let i = 0; i < n; i++) {
     const start = angle + i * arc;
+
     ctx.beginPath();
-    ctx.fillStyle = 
-    (i % 3 === 0) ? "#ffcc66" :
-    (i % 3 === 1) ? "#66ccff" :
-                    "green";
+    ctx.fillStyle =
+      (i % 3 === 0) ? "#ffcc66" :
+      (i % 3 === 1) ? "#66ccff" :
+                      "green";
+
     ctx.moveTo(CENTER, CENTER);
     ctx.arc(CENTER, CENTER, WHEEL_RADIUS, start, start + arc);
     ctx.closePath();
     ctx.fill();
-    // Text
+
     ctx.save();
     ctx.translate(CENTER, CENTER);
-    ctx.rotate(start + arc/2);
+    ctx.rotate(start + arc / 2);
     ctx.textAlign = "right";
     ctx.fillStyle = "#000";
     ctx.font = "14px Arial";
@@ -92,21 +161,27 @@ function drawWheel(labels) {
   }
 }
 
-// Tính kết quả dựa trên kim chỉ ở trên cùng
+
+/* ============================================================
+   6) TÍNH Ô TRÚNG
+============================================================ */
 function pickResult(labels) {
   const n = labels.length;
   const arc = (2 * Math.PI) / n;
-  // Kim ở bên phải (3h) = góc 0 rad
-  let adjustedAngle = (angle + 2*Math.PI) % (2*Math.PI) + arc;
+  let adjustedAngle = (angle + 2 * Math.PI) % (2 * Math.PI) + arc;
   let selected = Math.floor(adjustedAngle / arc);
-  selected = (n - selected) % n; // đảo lại vì quay ngược
-  return selected;
+  return (n - selected) % n;
 }
 
+
+/* ============================================================
+   7) QUAY VÒNG
+============================================================ */
 function spinWheel() {
   if (spinning) return;
   spinning = true;
-  let spins = Math.random() * 5 + 5; // quay 5-10 vòng
+
+  let spins = Math.random() * 5 + 5;
   let finalAngle = angle + spins * 2 * Math.PI;
   let duration = 4000;
   let start = null;
@@ -117,15 +192,15 @@ function spinWheel() {
     if (!start) start = ts;
     let progress = ts - start;
     let t = Math.min(progress / duration, 1);
-    let eased = 1 - Math.pow(1 - t, 3);
-    angle = finalAngle * eased;
+    angle = finalAngle * (1 - Math.pow(1 - t, 3));
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
     if (currentMode === "quiz") {
-      drawWheel(allQuizzes.map(q => q.name));
+      const arranged = distributeSpecialSlots(allQuizzes.map(q => q.name));
+      drawWheel(arranged);
       labelEl.style.display = "none";
     } else {
-      drawWheel(currentQuestions.map((q, i) => `Câu ${i + 1}`));
+      const arranged = distributeSpecialSlots(currentQuestions.map((q, i) => `Câu ${i + 1}`));
+      drawWheel(arranged);
       labelEl.style.display = "block";
     }
 
@@ -133,54 +208,69 @@ function spinWheel() {
       requestAnimationFrame(animate);
     } else {
       spinning = false;
-      let idx;
-      if (currentMode === "quiz") {
-        idx = pickResult(allQuizzes.map(q => q.name));
-        selectedQuiz = allQuizzes[idx];
-        console.log("Quiz: ", selectedQuiz);
-        // Hiện tên tỉnh
-        if(selectedQuiz.name=="Bất ngờ chưa!") labelEl.textContent = "Bất ngờ chưa!";
-        else labelEl.textContent = `Tỉnh thành được chọn: ${selectedQuiz.name}`;
-        labelEl.style.display = "block";
-
-        // ⏳ Chờ 3 giây trước khi chuyển sang vòng quay câu hỏi
-        setTimeout(() => {
-          currentMode = "question";
-          fetchQuestions(selectedQuiz.id);
-        }, 1000);
-
-      } else {
-        idx = pickResult(currentQuestions.map((q, i) => `Câu ${i + 1}`));
-        showQuestion(idx);
-      }
+      handleSpinResult(labelEl);
     }
   }
 
   requestAnimationFrame(animate);
 }
 
+
+function handleSpinResult(labelEl) {
+  let idx;
+
+  if (currentMode === "quiz") {
+    const arranged = distributeSpecialSlots(allQuizzes.map(q => q.name));
+    idx = pickResult(arranged);
+    selectedQuiz = allQuizzes.find(q => q.name === arranged[idx]);
+
+    labelEl.textContent = selectedQuiz.name === "Bất ngờ chưa!"
+      ? "Bất ngờ chưa!"
+      : `Tỉnh thành được chọn: ${selectedQuiz.name}`;
+
+    labelEl.style.display = "block";
+
+    setTimeout(() => {
+      currentMode = "question";
+      fetchQuestions(selectedQuiz.id);
+    }, 1500);
+
+  } else {
+    const arranged = distributeSpecialSlots(currentQuestions.map((q, i) => `Câu ${i + 1}`));
+    idx = pickResult(arranged);
+    showQuestion(idx);
+  }
+}
+
+
+/* ============================================================
+   8) POPUP CÂU HỎI
+============================================================ */
 function showQuestion(index) {
   const question = currentQuestions[index];
   const popup = document.getElementById("popup");
   popup.classList.add("active");
+
   const content = document.getElementById("popup-content");
-  // 🟢 SPECIAL +/- VALUE (cộng hoặc trừ điểm)
+
+  // SPECIAL +/- VALUE
   const match = question.question_text.match(/([+-]\d+)/);
   if (match) {
-    const value = parseInt(match[1]); // tự nhận +5 hoặc -5
-
+    const value = parseInt(match[1]);
     let color = value > 0 ? "text-success" : "text-danger";
-    let label = value > 0 ? `+${value} điểm!` : `${value} điểm!`;
+    let msg = value > 0 ? `+${value} điểm!` : `${value} điểm!`;
 
     content.innerHTML = `
-      <h3 class="${color}">${label}</h3>
+      <h3 class="${color}">${msg}</h3>
       <p>${question.question_text}</p>
       <button class="btn btn-primary mt-3" onclick="specialPlus(${value})">OK</button>
     `;
     return;
   }
-  // 🟡 BÌNH THƯỜNG
+
+  // CÂU HỎI THƯỜNG
   content.innerHTML = `<h5>${question.question_text}</h5>`;
+
   if (question.question_type === "mcq" || question.question_type === "true_false") {
     for (let key in question.options) {
       content.innerHTML += `
@@ -193,35 +283,52 @@ function showQuestion(index) {
   } else {
     content.innerHTML += `<input type="text" class="form-control" id="note-answer">`;
   }
+
   content.innerHTML += `
     <button class="btn btn-success mt-2" onclick="checkAnswer(${index})">Check</button>
   `;
 }
 
+
+/* ============================================================
+   9) CHECK ĐÁP ÁN
+============================================================ */
 function checkAnswer(index) {
   const q = currentQuestions[index];
   let isCorrect = false;
+
   if (q.question_type === "note") {
     const val = document.getElementById("note-answer").value.trim().toLowerCase();
-    const valid = q.correct_answer.toLowerCase().split(",").map(s=>s.trim());
+    const valid = q.correct_answer.toLowerCase().split(",").map(s => s.trim());
     isCorrect = valid.includes(val);
   } else {
     const sel = document.querySelector('input[name="answer"]:checked');
     if (sel && sel.value === q.correct_answer) isCorrect = true;
   }
+
   alert(isCorrect ? "✅ Đúng rồi!" : "❌ Sai rồi!");
   document.getElementById("popup").classList.remove("active");
   awardAndAdvance(isCorrect);
 }
 
-window.onload = async function() {
+
+/* ============================================================
+   10) SPECIAL +/- ĐIỂM
+============================================================ */
+function specialPlus(value) {
+  document.getElementById("popup").classList.remove("active");
+
+  gameState.players[gameState.currentPlayerIndex].score += value;
+
+  awardAndAdvance(false);
+}
+
+
+/* ============================================================
+   READY
+============================================================ */
+window.onload = async function () {
   initGameState();
   await fetchQuizzes();
   document.getElementById("spinBtn").onclick = spinWheel;
 };
-
-function specialPlus(value) {
-  document.getElementById("popup").classList.remove("active");
-  gameState.players[gameState.currentPlayerIndex].score += value;
-  awardAndAdvance(false);
-}
