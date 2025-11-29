@@ -218,17 +218,32 @@ function spinWheel() {
 
 function handleSpinResult(labelEl) {
   let idx;
-
   if (currentMode === "quiz") {
     const arranged = distributeSpecialSlots(allQuizzes.map(q => q.name));
     idx = pickResult(arranged);
     selectedQuiz = allQuizzes.find(q => q.name === arranged[idx]);
-
-    labelEl.textContent = selectedQuiz.name === "Bất ngờ chưa!"
-      ? "Bất ngờ chưa!"
-      : `Tỉnh thành được chọn: ${selectedQuiz.name}`;
-
+    labelEl.textContent=`Ô quay trúng: ${selectedQuiz.name}`;
     labelEl.style.display = "block";
+    // NẾU quay trúng ô đặc biệt ở VÒNG QUAY TỈNH THÀNH
+    if (selectedQuiz.name.includes("+") || selectedQuiz.name.includes("-")) {
+
+        // --- LẤY GIÁ TRỊ +10 hoặc -5 ---
+        const match = selectedQuiz.name.match(/([+-]\d+)/);
+        if (match) {
+            const value = parseInt(match[1]);
+
+            // CỘNG/TRỪ ĐIỂM NGAY
+            gameState.players[gameState.currentPlayerIndex].score += value;
+
+            // UPDATE hiển thị điểm
+            renderHeader();
+
+            // CHUYỂN LƯỢT
+            awardAndAdvance(false);
+
+            return; // Không đi vào quay câu hỏi
+        }
+    }
 
     setTimeout(() => {
       currentMode = "question";
@@ -252,21 +267,6 @@ function showQuestion(index) {
   popup.classList.add("active");
 
   const content = document.getElementById("popup-content");
-
-  // SPECIAL +/- VALUE
-  const match = question.question_text.match(/([+-]\d+)/);
-  if (match) {
-    const value = parseInt(match[1]);
-    let color = value > 0 ? "text-success" : "text-danger";
-    let msg = value > 0 ? `+${value} điểm!` : `${value} điểm!`;
-
-    content.innerHTML = `
-      <h3 class="${color}">${msg}</h3>
-      <p>${question.question_text}</p>
-      <button class="btn btn-primary mt-3" onclick="specialPlus(${value})">OK</button>
-    `;
-    return;
-  }
 
   // CÂU HỎI THƯỜNG
   content.innerHTML = `<h5>${question.question_text}</h5>`;
