@@ -29,8 +29,8 @@ function renderHeader() {
     }).join('');
 }
 
-function awardAndAdvance(isCorrect) {
-    if (isCorrect) gameState.players[gameState.currentPlayerIndex].score++;
+function awardAndAdvance(isCorrect, score = 1) {
+    if (isCorrect) gameState.players[gameState.currentPlayerIndex].score += score;
     gameState.currentPlayerIndex++;
     if (gameState.currentPlayerIndex >= gameState.players.length) {
         gameState.currentPlayerIndex = 0;
@@ -54,13 +54,23 @@ function fetchQuizzes() {
                 const btn = document.createElement("button");
                 btn.className = "btn btn-primary btn-quiz";
                 btn.innerText = quiz.name;
-                btn.onclick = () => loadQuiz(quiz.id);
+                btn.onclick = () => loadQuiz(quiz.id, quiz.name);
                 container.appendChild(btn);
             });
         });
 }
 
-function loadQuiz(quizId) {
+function loadQuiz(quizId, quizName) {
+    // NẾU quay trúng ô đặc biệt ở VÒNG QUAY TỈNH THÀNH
+    if (quizName.includes("+") || quizName.includes("-")) {
+        const match = quizName.match(/([+-]\d+)/);
+        if (match) {
+            const value = parseInt(match[1]);
+            awardAndAdvance(true, value);
+            return;
+        }
+    }
+
     fetch(`${API_BASE_URL}/api/questions/${quizId}`)
         .then(res => res.json())
         .then(data => {
