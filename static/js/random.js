@@ -277,8 +277,8 @@ function showQuestion(index) {
         <div class="form-check">
           <input class="form-check-input" type="radio" name="answer" value="${key}">
           <label class="form-check-label">${key}: ${question.options[key]}</label>
-        </div>
-      `;
+        </div>`
+      ;
     }
   } else {
     content.innerHTML += `<input type="text" class="form-control" id="note-answer">`;
