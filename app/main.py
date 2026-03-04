@@ -108,6 +108,13 @@ def delete_quiz(quiz_id: int):
     conn.close()
     return {"status": "deleted"}
 
+@app.get("/flashcard", response_class=HTMLResponse)
+def flashcard_page(request: Request):
+    return templates.TemplateResponse(
+        "flashcard.html",
+        {"request": request, "timestamp": request.state.timestamp}
+    )
+
 # -------------------- API QUESTIONS --------------------
 @app.get("/api/questions/{quiz_id}")
 def get_questions(quiz_id: int):

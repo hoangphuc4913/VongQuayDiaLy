@@ -1,13 +1,12 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Quản lý Quiz</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/static/css/admin.css?ts={{ timestamp }}">
-</head>
-<body class="bg-light">
+{% extends "base.html" %}
+
+{% block title %}📚 Quản lý Quiz & Câu hỏi{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/admin.css') }}">
+{% endblock %}
+
+{% block content %}
   <div class="container py-4">
     <h2 class="mb-4">📚 Quản lý Quiz & Câu hỏi</h2>
     <a href="/home" class="btn btn-secondary mb-3">⬅ Về Trang chủ</a>
@@ -132,5 +131,4 @@
   </div>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/static/js/admin.js?ts={{ timestamp }}"></script>
-</body>
-</html>
+{% endblock %}
