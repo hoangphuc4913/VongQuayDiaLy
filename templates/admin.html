@@ -23,6 +23,14 @@
 
     <!-- Modal xem danh sách câu hỏi -->
     <div class="modal fade" tabindex="-1" id="viewQuestionsModal">
+      <div class="mb-3 d-flex gap-2">
+        <button class="btn btn-success" onclick="exportExcel()">Xuất file Excel</button>
+
+        <input type="file" id="importFile" hidden>
+        <button class="btn btn-primary" onclick="document.getElementById('importFile').click()">
+            Nhập file Excel
+        </button>
+      </div>
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">

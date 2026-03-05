@@ -294,3 +294,32 @@ document.getElementById("saveBtn").addEventListener("click", async function() {
 
   this.style.opacity = 1;
 });
+
+// EXPORT
+function exportExcel() {
+  if (!selectedQuiz) return alert("Chọn quiz trước!");
+
+  window.location.href = `/api/export_questions/${selectedQuiz}`;
+}
+
+
+// IMPORT
+document.getElementById("importFile").addEventListener("change", async function () {
+
+  if (!selectedQuiz) {
+    alert("Chọn quiz trước!");
+    return;
+  }
+
+  const file = this.files[0];
+  const formData = new FormData();
+  formData.append("file", file);
+
+  await fetch(`/api/import_questions/${selectedQuiz}`, {
+    method: "POST",
+    body: formData
+  });
+
+  alert("Import thành công ✅");
+  refreshQuestionList();
+});

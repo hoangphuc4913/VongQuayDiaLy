@@ -3,6 +3,9 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from fastapi import UploadFile, File
+from openpyxl import Workbook, load_workbook
+from io import BytesIO
 import sqlite3, json, os, requests, base64, httpx, asyncio
 from starlette.responses import Response
 app = FastAPI()
@@ -245,3 +248,81 @@ async def save_quiz_file():
             await asyncio.sleep(5)
 
     return {"status": final_status, "db":res_db}
+
+#--Nhập xuất file excel--
+@app.get("/api/export_questions/{quiz_id}")
+def export_questions(quiz_id: int):
+    conn = get_db()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM questions WHERE quiz_id=?", (quiz_id,))
+    rows = cur.fetchall()
+    conn.close()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Questions"
+    ws.append([
+        "question_text",
+        "question_type",
+        "A", "B", "C", "D",
+        "correct_answer"
+    ])
+    for r in rows:
+        q = dict(r)
+        options = json.loads(q["options"]) if q["options"] else {}
+        ws.append([
+            q["question_text"],
+            q["question_type"],
+            options.get("A", ""),
+            options.get("B", ""),
+            options.get("C", ""),
+            options.get("D", ""),
+            q["correct_answer"]
+        ])
+    file_stream = BytesIO()
+    wb.save(file_stream)
+    file_stream.seek(0)
+    return Response(
+        content=file_stream.read(),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={
+            "Content-Disposition": f"attachment; filename=quiz_{quiz_id}.xlsx"
+        }
+    )
+
+@app.post("/api/import_questions/{quiz_id}")
+async def import_questions(quiz_id: int, file: UploadFile = File(...)):
+    content = await file.read()
+    wb = load_workbook(BytesIO(content))
+    ws = wb.active
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    # Bỏ dòng header
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        question_text, question_type, A, B, C, D, correct = row
+
+        options = None
+        if question_type != "note":
+            options = {
+                "A": A,
+                "B": B,
+                "C": C,
+                "D": D
+            }
+
+        cur.execute("""
+            INSERT INTO questions (quiz_id, question_text, question_type, options, correct_answer)
+            VALUES (?, ?, ?, ?, ?)
+        """, (
+            quiz_id,
+            question_text,
+            question_type,
+            json.dumps(options) if options else None,
+            correct
+        ))
+
+    conn.commit()
+    conn.close()
+
+    return {"status": "imported"}
