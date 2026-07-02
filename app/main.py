@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi import UploadFile, File
+import shutil
+import uuid
 from openpyxl import Workbook, load_workbook
 from io import BytesIO
 import sqlite3, json, os, requests, base64, httpx, asyncio
@@ -144,6 +146,11 @@ def get_question(q_id: int):
     if not row:
         return {"error": "not found"}
     q = dict(row)
+    q["question_image"] = q["question_image"]
+    q["option_a_image"] = q["option_a_image"]
+    q["option_b_image"] = q["option_b_image"]
+    q["option_c_image"] = q["option_c_image"]
+    q["option_d_image"] = q["option_d_image"]
     if q["options"]:
         q["options"] = json.loads(q["options"])
     return q
@@ -153,10 +160,10 @@ def create_question(data: dict):
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        """INSERT INTO questions (quiz_id, question_text, question_type, options, correct_answer)
-           VALUES (?, ?, ?, ?, ?)""",
-        (data["quiz_id"], data["question_text"], data["question_type"],
-         json.dumps(data["options"]), data["correct_answer"])
+        """INSERT INTO questions(quiz_id, question_text, question_type, question_image, options, correct_answer, option_a_image, option_b_image, option_c_image, option_d_image)
+VALUES(?,?,?,?,?,?,?,?,?,?)""",
+        ((data["quiz_id"], data["question_text"], data["question_type"], data.get("question_image"),
+        json.dumps(data["options"]), data["correct_answer"], data.get("option_a_image"), data.get("option_b_image"), data.get("option_c_image"), data.get("option_d_image")))
     )
     conn.commit()
     qid = cur.lastrowid
@@ -168,11 +175,11 @@ def update_question(q_id: int, data: dict):
     conn = get_db()
     cur = conn.cursor()
     cur.execute(
-        """UPDATE questions 
-           SET question_text=?, question_type=?, options=?, correct_answer=? 
-           WHERE id=?""",
-        (data["question_text"], data["question_type"],
-         json.dumps(data["options"]), data["correct_answer"], q_id)
+        """UPDATE questions SET question_text=?, question_type=?, question_image=?, options=?, correct_answer=?,
+        option_a_image=?, option_b_image=?, option_c_image=?, option_d_image=? WHERE id=?""",
+        ((data["question_text"], data["question_type"], data.get("question_image"), json.dumps(data["options"]), data["correct_answer"],
+        data.get("option_a_image"), data.get("option_b_image"), data.get("option_c_image"), data.get("option_d_image"), q_id
+        ))
     )
     conn.commit()
     conn.close()
@@ -326,3 +333,21 @@ async def import_questions(quiz_id: int, file: UploadFile = File(...)):
     conn.close()
 
     return {"status": "imported"}
+
+# -------------------- API IMAGES --------------------
+@app.post("/api/upload_image")
+async def upload_image(file: UploadFile = File(...)):
+
+    ext = file.filename.split(".")[-1]
+
+    filename = f"{uuid.uuid4()}.{ext}"
+
+    save_path = f"static/uploads/{filename}"
+
+    with open(save_path,"wb") as buffer:
+        shutil.copyfileobj(file.file,buffer)
+
+    return {
+        "path":f"uploads/{filename}"
+    }
+

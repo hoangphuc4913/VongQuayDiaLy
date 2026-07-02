@@ -40,31 +40,88 @@ function loadFlashcards(quizId) {
         });
 }
 
-function showCard() {
-    if (currentQuestions.length === 0) return;
+function showCard(){
 
-    const q = currentQuestions[currentIndex];
+    if(currentQuestions.length==0) return;
 
-    // Mặt trước
-    document.getElementById("card-front").innerText = q.question_text;
+    const q=currentQuestions[currentIndex];
 
-    // Mặt sau (chỉ đáp án đúng)
-    if (q.question_type === "mcq" || q.question_type === "true_false") {
-        document.getElementById("card-back").innerText =
-            q.options[q.correct_answer];
-    } else {
-        document.getElementById("card-back").innerText =
-            q.correct_answer;
+    const front=document.getElementById("card-front");
+    const back=document.getElementById("card-back");
+
+    front.innerHTML="";
+    back.innerHTML="";
+
+    //========================
+    // FRONT
+    //========================
+
+    if(q.question_image){
+
+        front.innerHTML+=`
+        <img src="/static/${q.question_image}">
+        `;
     }
 
-    // Reset flip
-    document.getElementById("flashcard").classList.remove("flip");
+    if(q.question_text){
 
-    // 🔥 Cập nhật Câu x / y
-    document.getElementById("progress-text").innerText =
-        `Câu ${currentIndex + 1} / ${currentQuestions.length}`;
+        front.innerHTML+=`
+        <div class="fs-4 fw-bold">
+            ${q.question_text}
+        </div>
+        `;
+    }
+
+    //========================
+    // BACK
+    //========================
+
+    if(q.question_type=="ans_img"){
+
+        const imgs={
+            A:q.option_a_image,
+            B:q.option_b_image,
+            C:q.option_c_image,
+            D:q.option_d_image
+        };
+
+        back.innerHTML=`
+            <img
+                class="answer-image"
+                src="/static/${imgs[q.correct_answer]}">
+        `;
+    }
+
+    else if(
+        q.question_type=="mcq"||
+        q.question_type=="question_img"||
+        q.question_type=="true_false"
+    ){
+
+        back.innerHTML=`
+        <div class="fs-2 fw-bold">
+            ${q.options[q.correct_answer]}
+        </div>
+        `;
+    }
+
+    else{
+
+        back.innerHTML=`
+        <div class="fs-2 fw-bold">
+            ${q.correct_answer}
+        </div>
+        `;
+
+    }
+
+    document
+        .getElementById("flashcard")
+        .classList.remove("flip");
+
+    document.getElementById("progress-text").innerHTML=
+        `Câu ${currentIndex+1} / ${currentQuestions.length}`;
 }
-
 
 // =====================
 // NEXT (vòng tròn)

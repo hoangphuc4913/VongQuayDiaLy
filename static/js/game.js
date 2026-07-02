@@ -99,40 +99,157 @@ function showQuestion(index) {
     const question = currentQuestions[index];
     const popup = document.getElementById("popup");
     popup.classList.add("active");
-
     const content = document.getElementById("popup-content");
-    content.innerHTML = `<h5>${question.question_text}</h5>`;
+    let html = "";
 
-    if (question.question_type === "mcq" || question.question_type === "true_false") {
-        for (let key in question.options) {
-            content.innerHTML += `
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="answer" value="${key}">
-                    <label class="form-check-label">${key}: ${question.options[key]}</label>
-                </div>`;
-        }
-    } else {
-        content.innerHTML += `<input type="text" class="form-control" id="note-answer">`;
+    // ======================
+    // Ảnh câu hỏi
+    // ======================
+    if(question.question_image){
+        html += `
+        <div style="text-align:center;margin-bottom:15px;">
+            <img
+                src="/static/${question.question_image}"
+                style="
+                    max-width:100%;
+                    max-height:260px;
+                    object-fit:contain;
+                    border-radius:10px;
+                    border:1px solid #ccc;">
+        </div>
+        `;
+    }
+    // ======================
+    // Nội dung câu hỏi
+    // ======================
+    if(question.question_text){
+        html += `<h5>${question.question_text}</h5>`;
     }
 
-    content.innerHTML += `<button class="btn btn-success mt-2" onclick="checkAnswer(${index})">Kiểm tra</button>`;
+    // ======================
+    // MCQ
+    // ======================
+    if(question.question_type==="mcq" || question.question_type==="question_img"){
+        for(const key in question.options){
+            html += `
+            <div class="form-check">
+                <input
+                    class="form-check-input"
+                    type="radio"
+                    name="answer"
+                    value="${key}">
+
+                <label class="form-check-label">
+                    ${key}: ${question.options[key]}
+                </label>
+
+            </div>
+            `;
+        }
+    }
+
+    // ======================
+    // Đúng Sai
+    // ======================
+    else if(question.question_type==="true_false"){
+        for(const key in question.options){
+            html += `
+            <div class="form-check">
+                <input
+                    class="form-check-input"
+                    type="radio"
+                    name="answer"
+                    value="${key}">
+                <label class="form-check-label">
+                    ${question.options[key]}
+                </label>
+
+            </div>
+            `;
+        }
+    }
+
+    // ======================
+    // Answer Image
+    // ======================
+    else if(question.question_type==="ans_img"){
+        html += `<div class="row g-3">`;
+        ["A","B","C","D"].forEach(letter=>{
+            const path=question[`option_${letter.toLowerCase()}_image`];
+            html += `
+            <div class="col-6 text-center">
+                <input
+                    type="radio"
+                    class="btn-check"
+                    name="answer"
+                    id="ans${letter}"
+                    value="${letter}">
+                <label
+                    class="btn btn-outline-secondary w-100"
+                    for="ans${letter}">
+                    <img
+                        src="/static/${path}"
+                        style="
+                            width:120px;
+                            height:120px;
+                            object-fit:contain;">
+                </label>
+            </div>
+            `;
+        });
+        html += `</div>`;
+    }
+
+    // ======================
+    // Note
+    // ======================
+
+    else{
+        html += `
+        <input
+            id="note-answer"
+            class="form-control">
+        `;
+    }
+    html += `
+    <button
+        class="btn btn-success mt-3"
+        onclick="checkAnswer(${index})">
+        Kiểm tra
+    </button>
+    `;
+    content.innerHTML=html;
 }
 
-function checkAnswer(index) {
-    const q = currentQuestions[index];
-    let isCorrect = false;
-
-    if (q.question_type === "note") {
-        const val = document.getElementById("note-answer").value.trim().toLowerCase();
-        const valid = q.correct_answer.toLowerCase().split(",").map(s => s.trim());
-        isCorrect = valid.includes(val);
-    } else {
-        const sel = document.querySelector('input[name="answer"]:checked');
-        if (sel && sel.value === q.correct_answer) isCorrect = true;
+function checkAnswer(index){
+    const q=currentQuestions[index];
+    let isCorrect=false;
+    if(q.question_type==="note"){
+        const val=document
+            .getElementById("note-answer")
+            .value
+            .trim()
+            .toLowerCase();
+        const valid=q.correct_answer
+            .toLowerCase()
+            .split(",")
+            .map(x=>x.trim());
+        isCorrect=valid.includes(val);
     }
+    else{
+        const sel=document.querySelector(
+            'input[name="answer"]:checked'
+        );
+        if(sel){
+            isCorrect=sel.value===q.correct_answer;
+        }
 
+    }
     alert(isCorrect ? "✅ Đúng rồi!" : "❌ Sai rồi!");
-    document.getElementById("popup").classList.remove("active");
+    document
+        .getElementById("popup")
+        .classList
+        .remove("active");
     awardAndAdvance(isCorrect);
 }
 

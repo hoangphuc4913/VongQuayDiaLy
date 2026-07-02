@@ -77,31 +77,72 @@
       </div>
     </div>
 
-    <!-- Modal thêm Câu hỏi -->
-    <div class="modal" tabindex="-1" id="questionModal">
-      <div class="modal-dialog">
+<!-- Modal thêm Câu hỏi -->
+<div class="modal fade" id="questionModal" tabindex="-1">
+    <div class="modal-dialog">
         <div class="modal-content">
-          <div class="modal-header"><h5 class="modal-title">Thêm Câu hỏi</h5></div>
-          <div class="modal-body">
-            <input type="text" id="qText" class="form-control mb-2" placeholder="Nội dung câu hỏi">
-
-            <label class="form-label">Loại câu hỏi</label>
-            <select id="qType" class="form-select mb-2" onchange="renderOptionsByType()">
-              <option value="mcq">Trắc nghiệm (ABCD)</option>
-              <option value="true_false">Đúng / Sai</option>
-              <option value="note">Tự nhập (Note)</option>
-            </select>
-
-            <div id="optionsBox"></div>
-            <input type="text" id="correctAnswer" class="form-control mt-2" placeholder="Đáp án đúng (A/B/C/...)">
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-            <button class="btn btn-success" onclick="addQuestion()">Lưu</button>
-          </div>
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm Câu hỏi</h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input
+                    type="text"
+                    id="qText"
+                    class="form-control mb-3"
+                    placeholder="Nội dung câu hỏi">
+                <!-- Ảnh câu hỏi -->
+                <div id="questionImageBox" style="display:none;">
+                    <label class="form-label">Ảnh câu hỏi</label>
+                    <input
+                        type="file"
+                        id="questionImage"
+                        class="form-control mb-2"
+                        accept="image/*">
+                    <img
+                        id="questionPreview"
+                        src=""
+                        style="
+                            display:none;
+                            max-width:250px;
+                            max-height:180px;
+                            border:1px solid #ccc;
+                            border-radius:8px;
+                            margin-bottom:15px;">
+                </div>
+                <label class="form-label">Loại câu hỏi</label>
+                <select
+                    id="qType"
+                    class="form-select mb-3"
+                    onchange="renderOptionsByType()">
+                    <option value="mcq">Trắc nghiệm (ABCD)</option>
+                    <option value="question_img">Câu hỏi có hình ảnh</option>
+                    <option value="ans_img">Đáp án bằng hình ảnh</option>
+                    <option value="true_false">Đúng / Sai</option>
+                    <option value="note">Tự nhập (Note)</option>
+                </select>
+                <div id="optionsBox"></div>
+                <input
+                    type="text"
+                    id="correctAnswer"
+                    class="form-control mt-3"
+                    placeholder="Đáp án đúng">
+            </div>
+            <div class="modal-footer">
+                <button
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+                    Hủy
+                </button>
+                <button
+                    class="btn btn-success"
+                    onclick="addQuestion()">
+                    Lưu
+                </button>
+            </div>
         </div>
-      </div>
     </div>
+</div>
 
     <!-- Modal sửa Câu hỏi -->
     <div class="modal fade" tabindex="-1" id="editQuestionModal">
@@ -114,12 +155,30 @@
           <div class="modal-body">
             <label class="form-label">Nội dung câu hỏi</label>
             <input type="text" id="editQText" class="form-control mb-3">
+            <div id="editQuestionImageBox" style="display:none;">
+              <label class="form-label">Ảnh câu hỏi</label>
+              <input
+                  type="file"
+                  id="editQuestionImage"
+                  class="form-control mb-2"
+                  accept="image/*">
+              <img
+                  id="editQuestionPreview"
+                  style="
+                      display:none;
+                      max-width:250px;
+                      max-height:180px;
+                      border:1px solid #ccc;
+                      border-radius:8px;">
+            </div>
 
             <label class="form-label">Loại câu hỏi</label>
             <select id="editQType" class="form-select mb-2" onchange="renderEditOptionsByType()">
               <option value="mcq">Trắc nghiệm (ABCD)</option>
               <option value="true_false">Đúng / Sai</option>
               <option value="note">Tự nhập (Note)</option>
+              <option value="question_img">Câu hỏi có hình ảnh</option>
+              <option value="ans_img">Đáp án bằng hình ảnh</option>
             </select>
 
             <label class="form-label">Các lựa chọn</label>

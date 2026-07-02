@@ -18,27 +18,42 @@
 <h5 class="px-3">Chọn tỉnh thành</h5>
 <div id="quiz-container" class="d-flex flex-wrap px-3"></div>
 
+<!-- FLASHCARD SECTION -->
 <div class="flashcard-wrapper d-none" id="flashcard-section">
 
-    <!-- Hiển thị câu x/y -->
-    <div class="mb-3 fw-bold" id="progress-text">
+    <!-- Progress -->
+    <div class="mb-3 fw-bold fs-5" id="progress-text">
         Câu 1 / 1
     </div>
 
+    <!-- Card -->
     <div class="flashcard" id="flashcard">
+
         <div class="flashcard-inner">
+
+            <!-- FRONT -->
             <div class="flashcard-front" id="card-front">
-                Câu hỏi
+                <!-- question text + image -->
             </div>
+
+            <!-- BACK -->
             <div class="flashcard-back" id="card-back">
-                Đáp án
+                <!-- answer -->
             </div>
+
         </div>
+
     </div>
 
-    <div class="mt-3 text-center">
-        <button class="btn btn-secondary me-2" id="prevBtn">Previous</button>
-        <button class="btn btn-secondary" id="nextBtn">Next</button>
+    <!-- Controls -->
+    <div class="mt-4 text-center">
+        <button class="btn btn-secondary me-2" id="prevBtn">
+            ⬅ Previous
+        </button>
+
+        <button class="btn btn-secondary" id="nextBtn">
+            Next ➜
+        </button>
     </div>
 
 </div>

@@ -262,31 +262,118 @@ function handleSpinResult(labelEl) {
    8) POPUP CÂU HỎI
 ============================================================ */
 function showQuestion(index) {
-  const question = currentQuestions[index];
-  const popup = document.getElementById("popup");
-  popup.classList.add("active");
+    const question = currentQuestions[index];
+    const popup = document.getElementById("popup");
+    popup.classList.add("active");
+    const content = document.getElementById("popup-content");
+    content.innerHTML = "";
 
-  const content = document.getElementById("popup-content");
-
-  // CÂU HỎI THƯỜNG
-  content.innerHTML = `<h5>${question.question_text}</h5>`;
-
-  if (question.question_type === "mcq" || question.question_type === "true_false") {
-    for (let key in question.options) {
-      content.innerHTML += `
-        <div class="form-check">
-          <input class="form-check-input" type="radio" name="answer" value="${key}">
-          <label class="form-check-label">${key}: ${question.options[key]}</label>
-        </div>`
-      ;
+    // =========================
+    // HIỂN THỊ CÂU HỎI
+    // =========================
+    if (question.question_image) {
+        content.innerHTML += `
+            <img
+                src="/static/${question.question_image}"
+                class="img-fluid rounded mb-3"
+                style="max-height:250px">
+        `;
     }
-  } else {
-    content.innerHTML += `<input type="text" class="form-control" id="note-answer">`;
-  }
+    if (question.question_text) {
+        content.innerHTML += `
+            <h5 class="mb-3">${question.question_text}</h5>
+        `;
+    }
 
-  content.innerHTML += `
-    <button class="btn btn-success mt-2" onclick="checkAnswer(${index})">Check</button>
-  `;
+    // =========================
+    // MCQ / QUESTION_IMG
+    // =========================
+    if (
+        question.question_type === "mcq" ||
+        question.question_type === "question_img"
+    ) {
+        for (let key in question.options) {
+            content.innerHTML += `
+            <div class="form-check mb-2">
+                <input
+                    class="form-check-input"
+                    type="radio"
+                    name="answer"
+                    value="${key}">
+                <label class="form-check-label">
+                    <b>${key}</b> :
+                    ${question.options[key]}
+                </label>
+            </div>`;
+        }
+    }
+
+    // =========================
+    // IMAGE ANSWER
+    // =========================
+    else if (question.question_type === "ans_img") {
+        const imgs = {
+            A: question.option_a_image,
+            B: question.option_b_image,
+            C: question.option_c_image,
+            D: question.option_d_image
+        };
+        for (let key of ["A","B","C","D"]) {
+            content.innerHTML += `
+            <label class="d-block border rounded p-2 mb-3 text-center">
+                <input
+                    type="radio"
+                    name="answer"
+                    value="${key}"
+                    class="form-check-input mb-2">
+                <br>
+                <img
+                    src="/static/${imgs[key]}"
+                    style="
+                        max-width:220px;
+                        max-height:170px;
+                    ">
+            </label>`;
+        }
+    }
+
+    // =========================
+    // TRUE FALSE
+    // =========================
+    else if (question.question_type === "true_false") {
+        for (let key in question.options) {
+            content.innerHTML += `
+            <div class="form-check">
+                <input
+                    class="form-check-input"
+                    type="radio"
+                    name="answer"
+                    value="${key}">
+
+                <label class="form-check-label">
+                    ${question.options[key]}
+                </label>
+            </div>`;
+        }
+    }
+
+    // =========================
+    // NOTE
+    // =========================
+    else {
+        content.innerHTML += `
+            <input
+                class="form-control"
+                id="note-answer">
+        `;
+    }
+    content.innerHTML += `
+        <button
+            class="btn btn-success mt-3"
+            onclick="checkAnswer(${index})">
+            Kiểm tra
+        </button>
+    `;
 }
 
 
@@ -294,21 +381,33 @@ function showQuestion(index) {
    9) CHECK ĐÁP ÁN
 ============================================================ */
 function checkAnswer(index) {
-  const q = currentQuestions[index];
-  let isCorrect = false;
+    const q = currentQuestions[index];
+    let isCorrect = false;
+    if (q.question_type === "note") {
+        const val = document
+            .getElementById("note-answer")
+            .value
+            .trim()
+            .toLowerCase();
+        const valid = q.correct_answer
+            .toLowerCase()
+            .split(",")
+            .map(s => s.trim());
+        isCorrect = valid.includes(val);
+    }
 
-  if (q.question_type === "note") {
-    const val = document.getElementById("note-answer").value.trim().toLowerCase();
-    const valid = q.correct_answer.toLowerCase().split(",").map(s => s.trim());
-    isCorrect = valid.includes(val);
-  } else {
-    const sel = document.querySelector('input[name="answer"]:checked');
-    if (sel && sel.value === q.correct_answer) isCorrect = true;
-  }
-
-  alert(isCorrect ? "✅ Đúng rồi!" : "❌ Sai rồi!");
-  document.getElementById("popup").classList.remove("active");
-  awardAndAdvance(isCorrect);
+    else {
+        const sel = document.querySelector(
+            'input[name="answer"]:checked'
+        );
+        if (sel)
+            isCorrect = sel.value === q.correct_answer;
+    }
+    alert(isCorrect ? "✅ Đúng!" : "❌ Sai!");
+    document
+        .getElementById("popup")
+        .classList.remove("active");
+    awardAndAdvance(isCorrect);
 }
 
 
