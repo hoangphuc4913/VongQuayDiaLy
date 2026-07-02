@@ -10,6 +10,9 @@ from openpyxl import Workbook, load_workbook
 from io import BytesIO
 import sqlite3, json, os, requests, base64, httpx, asyncio
 from starlette.responses import Response
+import os
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 app = FastAPI()
 
 app.add_middleware(
@@ -28,8 +31,9 @@ async def add_timestamp(request: Request, call_next):
     response = await call_next(request)
     return response
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+templates.env.cache = {}
 
 DB_PATH = "quiz.db"
 
@@ -42,9 +46,13 @@ def get_db():
 @app.get("/", response_class=HTMLResponse)
 @app.get("/home", response_class=HTMLResponse)
 def home(request: Request):
+    print("timestamp:", request.state.timestamp)
     return templates.TemplateResponse(
         "trang_chu.html",
-        {"request": request, "timestamp": request.state.timestamp}
+        {
+            "request": request,
+            "timestamp": request.state.timestamp
+        }
     )
 
 @app.get("/game", response_class=HTMLResponse)
