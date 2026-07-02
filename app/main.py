@@ -45,11 +45,12 @@ def get_db():
 @app.get("/", response_class=HTMLResponse)
 @app.get("/home", response_class=HTMLResponse)
 def home(request: Request):
+    print(request)
     return templates.TemplateResponse(
         "trang_chu.html",
         {
             "request": request,
-            "timestamp": request.state.timestamp
+            "timestamp": int(datetime.now().timestamp())
         }
     )
 
