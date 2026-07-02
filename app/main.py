@@ -33,7 +33,6 @@ async def add_timestamp(request: Request, call_next):
 
 app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
-templates.env.cache = {}
 
 DB_PATH = "quiz.db"
 
@@ -46,7 +45,6 @@ def get_db():
 @app.get("/", response_class=HTMLResponse)
 @app.get("/home", response_class=HTMLResponse)
 def home(request: Request):
-    print("timestamp:", request.state.timestamp)
     return templates.TemplateResponse(
         "trang_chu.html",
         {
